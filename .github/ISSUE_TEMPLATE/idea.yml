@@ -1,0 +1,47 @@
+name: "💡 Propose an idea"
+description: "Suggest a new idea for this project"
+title: "[Idea]: "
+labels: ["idea", "under-review"]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Idea title
+      description: Short and clear.
+      placeholder: "Add GitHub-based idea board"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is the idea? Include details.
+      placeholder: "Explain the idea..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem it solves
+      description: Why is this needed?
+      placeholder: "Describe the pain point..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: audience
+    attributes:
+      label: Who is it for?
+      placeholder: "Developers, users, ops..."
+    validations:
+      required: false
+
+  - type: input
+    id: links
+    attributes:
+      label: Links / references
+      placeholder: "https://..."
+    validations:
+      required: false
