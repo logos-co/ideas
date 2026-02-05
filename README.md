@@ -1,3 +1,5 @@
+![Banner](/public/ideaboard-header.png)
+
 # Logos Community Idea Board
 
 <!-- IDEAS:START -->
