@@ -1,0 +1,141 @@
+name: Publish approved ideas
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  publish:
+    if: github.event.label.name == 'approved'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+
+            function extractSection(heading) {
+              const re = new RegExp(`###\\s+${heading}\\s*\\n([\\s\\S]*?)(?=\\n###\\s+|$)`, 'i');
+              const match = body.match(re);
+              return match ? match[1].trim() : '';
+            }
+
+            const title =
+              extractSection('Idea Title') ||
+              issue.title.replace(/^\[Idea\]:\s*/i, '').trim();
+
+            const description = extractSection('Idea Description');
+
+            if (!title || !description) {
+              core.setFailed('Missing title or description.');
+              return;
+            }
+
+            const slug = title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, '')
+              .slice(0, 80);
+
+            const date = issue.created_at.slice(0,10);
+            const filename = `${date}-${slug}-${issue.number}.md`;
+            const ideaPath = path.join('ideas', filename);
+
+            if (!fs.existsSync('ideas')){
+              fs.mkdirSync('ideas');
+            }
+
+            if (!fs.existsSync(ideaPath)) {
+
+              const content = `---
+id: ${issue.number}
+title: "${title.replace(/"/g,'\\"')}"
+author: "${issue.user.login}"
+created: "${date}"
+issue: ${issue.number}
+---
+
+${description}
+`;
+
+              fs.writeFileSync(ideaPath, content);
+            }
+
+            // Build ideas.json
+            const files = fs.readdirSync('ideas');
+
+            const ideas = files.map(file=>{
+              const text = fs.readFileSync(path.join('ideas',file),'utf8');
+              const titleMatch = text.match(/title:\s*"(.*?)"/);
+              const createdMatch = text.match(/created:\s*"(.*?)"/);
+
+              return {
+                title: titleMatch?.[1],
+                created: createdMatch?.[1],
+                file
+              }
+            })
+            .filter(Boolean)
+            .sort((a,b)=> b.created.localeCompare(a.created));
+
+            if(!fs.existsSync('public')){
+              fs.mkdirSync('public');
+            }
+
+            fs.writeFileSync(
+              'public/ideas.json',
+              JSON.stringify({ideas}, null, 2)
+            );
+
+            // Update README
+            const readme = fs.readFileSync('README.md','utf8');
+
+            const start = '<!-- IDEAS:START -->';
+            const end = '<!-- IDEAS:END -->';
+
+            const newList = ideas.length
+              ? ideas.map(i=>`- **${i.title}**`).join('\n')
+              : '_No approved ideas yet._';
+
+            const updated = readme.replace(
+              new RegExp(`${start}[\\s\\S]*${end}`),
+              `${start}\n${newList}\n${end}`
+            );
+
+            fs.writeFileSync('README.md', updated);
+
+            const execSync = require('child_process').execSync;
+
+            execSync('git config user.name github-actions');
+            execSync('git config user.email github-actions@github.com');
+
+            execSync('git add .');
+
+            try{
+              execSync('git diff --cached --quiet');
+            }catch{
+              execSync(`git commit -m "Publish idea #${issue.number}"`);
+              execSync('git push');
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: "✅ Idea approved and published!"
+            });
