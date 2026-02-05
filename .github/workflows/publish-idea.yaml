@@ -1,0 +1,180 @@
+name: Publish approved ideas
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  publish:
+    if: github.event.label.name == 'approved'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Publish idea + update README + ideas.json
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { execSync } = require('child_process');
+
+            const issue = context.payload.issue;
+            const issueNumber = issue.number;
+            const issueBody = issue.body || '';
+            const author = issue.user?.login || 'unknown';
+            const created = (issue.created_at || new Date().toISOString()).slice(0, 10);
+
+            // Extract section from Issue Form body:
+            // ### Idea Title
+            // value...
+            function extractSection(heading) {
+              const re = new RegExp(`###\\s+${heading}\\s*\\n([\\s\\S]*?)(?=\\n###\\s+|$)`, 'i');
+              const m = issueBody.match(re);
+              return m ? m[1].trim() : '';
+            }
+
+            const ideaTitle =
+              extractSection('Idea Title') ||
+              (issue.title || '').replace(/^\[Idea\]:\s*/i, '').trim();
+
+            const ideaDescription = extractSection('Idea Description');
+
+            if (!ideaTitle || !ideaDescription) {
+              core.setFailed('Missing required fields: Idea Title and/or Idea Description.');
+              return;
+            }
+
+            // Slugify
+            const slug = ideaTitle
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, '')
+              .slice(0, 80);
+
+            // Ensure folders exist
+            const ideasDir = path.join(process.cwd(), 'ideas');
+            const publicDir = path.join(process.cwd(), 'public');
+            if (!fs.existsSync(ideasDir)) fs.mkdirSync(ideasDir, { recursive: true });
+            if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+
+            // Write idea file (id = issue number)
+            const filename = `${created}-${slug}-${issueNumber}.md`;
+            const ideaPath = path.join(ideasDir, filename);
+
+            if (!fs.existsSync(ideaPath)) {
+              const safeTitle = ideaTitle.replace(/"/g, '\\"');
+
+              const md = [
+                '---',
+                `id: ${issueNumber}`,
+                `title: "${safeTitle}"`,
+                `status: approved`,
+                `author: "${author}"`,
+                `created: "${created}"`,
+                `source_issue: ${issueNumber}`,
+                '---',
+                '',
+                ideaDescription.trim(),
+                ''
+              ].join('\n');
+
+              fs.writeFileSync(ideaPath, md, 'utf8');
+            }
+
+            // Read ideas and build ideas.json + README list
+            const files = fs.readdirSync(ideasDir).filter(f => f.endsWith('.md')).sort().reverse();
+
+            function parseFrontmatter(text) {
+              const m = text.match(/^---\n([\s\S]*?)\n---\n/);
+              if (!m) return { data: {}, body: text };
+              const fm = m[1].split('\n');
+              const data = {};
+              for (const line of fm) {
+                const idx = line.indexOf(':');
+                if (idx === -1) continue;
+                const key = line.slice(0, idx).trim();
+                let val = line.slice(idx + 1).trim();
+                val = val.replace(/^"(.*)"$/, '$1'); // strip quotes
+                data[key] = val;
+              }
+              return { data, body: text.slice(m[0].length) };
+            }
+
+            const ideas = files.map((file) => {
+              const full = fs.readFileSync(path.join(ideasDir, file), 'utf8');
+              const { data, body } = parseFrontmatter(full);
+              return {
+                id: Number(data.id || 0),
+                title: data.title || '',
+                author: data.author || '',
+                created: data.created || '',
+                file,
+                url: `ideas/${file}`,
+                excerpt: body.trim().replace(/\n+/g, ' ').slice(0, 240)
+              };
+            }).filter(i => i.title);
+
+            fs.writeFileSync(
+              path.join(publicDir, 'ideas.json'),
+              JSON.stringify({ ideas }, null, 2),
+              'utf8'
+            );
+
+            // Update README section between markers
+            const readmePath = path.join(process.cwd(), 'README.md');
+            if (!fs.existsSync(readmePath)) {
+              core.setFailed('README.md not found. Create README.md with IDEAS markers.');
+              return;
+            }
+
+            const readme = fs.readFileSync(readmePath, 'utf8');
+            const start = '<!-- IDEAS:START -->';
+            const end = '<!-- IDEAS:END -->';
+
+            if (!readme.includes(start) || !readme.includes(end)) {
+              core.setFailed('README markers not found. Add <!-- IDEAS:START --> and <!-- IDEAS:END -->');
+              return;
+            }
+
+            const list = ideas.length
+              ? ideas.map(i => `- **${i.title}** (by @${i.author}) — [details](${i.url})`).join('\n')
+              : '_No approved ideas yet._';
+
+            const markerRe = new RegExp(`${start}[\\s\\S]*?${end}`, 'm');
+            const updatedReadme = readme.replace(markerRe, `${start}\n${list}\n${end}`);
+            fs.writeFileSync(readmePath, updatedReadme, 'utf8');
+
+            // Commit + push
+            execSync('git config user.name "github-actions[bot]"');
+            execSync('git config user.email "github-actions[bot]@users.noreply.github.com"');
+
+            execSync('git add ideas public/ideas.json README.md');
+
+            // If no changes, don't fail
+            try {
+              execSync('git diff --cached --quiet');
+              console.log('No changes to commit.');
+            } catch (e) {
+              execSync(`git commit -m "Publish idea #${issueNumber}"`);
+              execSync('git push');
+            }
+
+            // Comment on the issue
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `✅ Approved and published!\n\n- Added: \`ideas/${filename}\`\n- Updated: \`public/ideas.json\`\n- README refreshed`
+            });
