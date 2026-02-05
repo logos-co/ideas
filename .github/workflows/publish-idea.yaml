@@ -115,14 +115,20 @@ jobs:
             const ideas = files.map((file) => {
               const full = fs.readFileSync(path.join(ideasDir, file), 'utf8');
               const { data, body } = parseFrontmatter(full);
+              const excerpt = body
+                .trim()
+                .replace(/\n+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .slice(0, 280);
+
               return {
                 id: Number(data.id || 0),
                 title: data.title || '',
-                author: data.author || '',
+                author: (data.author || '').replace(/^@/, ''),
                 created: data.created || '',
                 file,
                 url: `ideas/${file}`,
-                excerpt: body.trim().replace(/\n+/g, ' ').slice(0, 240)
+                excerpt
               };
             }).filter(i => i.title);
 
@@ -132,7 +138,7 @@ jobs:
               'utf8'
             );
 
-            // Update README section between markers
+            // Update README section between markers with collapsible entries
             const readmePath = path.join(process.cwd(), 'README.md');
             if (!fs.existsSync(readmePath)) {
               core.setFailed('README.md not found. Create README.md with IDEAS markers.');
@@ -148,8 +154,30 @@ jobs:
               return;
             }
 
+            function escapeHtml(s) {
+              return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            }
+
             const list = ideas.length
-              ? ideas.map(i => `- **${i.title}** (by @${i.author}) — [details](${i.url})`).join('\n')
+              ? ideas.map(i => {
+                  const title = escapeHtml(i.title);
+                  const author = escapeHtml(i.author || 'unknown');
+                  const excerpt = escapeHtml(i.excerpt || '');
+                  const url = i.url;
+
+                  return [
+                    '<details>',
+                    `<summary><b>${title}</b> (by @${author})</summary>`,
+                    '',
+                    excerpt ? `${excerpt}` : '',
+                    '',
+                    `<a href="${url}">Full details</a>`,
+                    '</details>'
+                  ].filter(Boolean).join('\n');
+                }).join('\n\n')
               : '_No approved ideas yet._';
 
             const markerRe = new RegExp(`${start}[\\s\\S]*?${end}`, 'm');
@@ -176,5 +204,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `✅ Approved and published!\n\n- Added: \`ideas/${filename}\`\n- Updated: \`public/ideas.json\`\n- README refreshed`
+              body: `✅ Approved and published!\n\n- Added: \`ideas/${filename}\`\n- Updated: \`public/ideas.json\`\n- README refreshed (collapsible list)`
             });
