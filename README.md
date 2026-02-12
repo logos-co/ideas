@@ -24,4 +24,4 @@ Centralised version control and code hosting platforms like GitHub can pose priv
 
 ## Contribute by proposing a new idea
 
-Have an interesting idea that can be built with the [Logos](https://logos.co) technology stack? Checkout the [Contribution Guide](/CONTRIBUTE.md) to learn about adding your own idea into this community curated idea board.
+Have an interesting idea that can be built with the [Logos](https://logos.co) technology stack? [Create an issue](https://github.com/logos-co/ideas/issues/new?template=idea.yml) to add your own idea into this community curated idea board.
