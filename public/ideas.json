@@ -1,6 +1,15 @@
 {
   "ideas": [
     {
+      "id": 3,
+      "title": "Privacy preserving location tracker",
+      "author": "hackyguru",
+      "created": "2026-02-12",
+      "file": "2026-02-12-privacy-preserving-location-tracker-3.md",
+      "url": "ideas/2026-02-12-privacy-preserving-location-tracker-3.md",
+      "excerpt": "A location tracker that does not expose user's location and enables them to share it with each other provided that they are shared access"
+    },
+    {
       "id": 2,
       "title": "Decentralised and private GitHub",
       "author": "hackyguru",

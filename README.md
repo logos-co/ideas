@@ -4,6 +4,12 @@
 
 <!-- IDEAS:START -->
 <details>
+<summary><b>Privacy preserving location tracker</b> (by @hackyguru)</summary>
+A location tracker that does not expose user's location and enables them to share it with each other provided that they are shared access
+<a href="ideas/2026-02-12-privacy-preserving-location-tracker-3.md">Full details</a>
+</details>
+
+<details>
 <summary><b>Decentralised and private GitHub</b> (by @hackyguru)</summary>
 Centralised version control and code hosting platforms like GitHub can pose privacy and censorship risks to developers who are working on critical areas of development. A decentralised alternative to GitHub could be revolutionary in fixing this problem.
 <a href="ideas/2026-02-05-decentralised-and-private-github-2.md">Full details</a>
