@@ -198,3 +198,4 @@ jobs:
               issue_number: issueNumber,
               body: `🚀 **Idea Published!**\n\nYour proposal has been formalized and added to the repository.\n\n- **File:** \`ideas/${filename}\`\n- **Live Entry:** [View in README](../blob/main/README.md)`
             });
+
