@@ -36,40 +36,40 @@ jobs:
             const author = issue.user?.login || 'unknown';
             const created = (issue.created_at || new Date().toISOString()).slice(0, 10);
 
-            // Extract section from Issue Form body:
-            // ### Idea Title
-            // value...
+            // Extract section from Issue Form body
             function extractSection(heading) {
-              const re = new RegExp(`###\\s+${heading}\\s*\\n([\\s\\S]*?)(?=\\n###\\s+|$)`, 'i');
+              const re = new RegExp(`###\\s+${heading}\\s*\\r?\\n([\\s\\S]*?)(?=\\r?\\n###\\s+|$)`, 'i');
               const m = issueBody.match(re);
               return m ? m[1].trim() : '';
             }
 
-            const ideaTitle =
-              extractSection('Idea Title') ||
-              (issue.title || '').replace(/^\[Idea\]:\s*/i, '').trim();
-
+            // Core Fields
+            const ideaTitle = extractSection('Idea Title') || (issue.title || '').replace(/^\[Idea\]:\s*/i, '').trim();
             const ideaDescription = extractSection('Idea Description');
+            
+            // New Specialized Fields
+            const socialProblem = extractSection('Social Problem & Logos Stack');
+            const previousAttempts = extractSection('Previous Attempts & Hypotheses');
+            const functionalSpecs = extractSection('Functional Specifications');
+            const risksStrategy = extractSection('Risks and Deployment Strategy');
 
             if (!ideaTitle || !ideaDescription) {
               core.setFailed('Missing required fields: Idea Title and/or Idea Description.');
               return;
             }
 
-            // Slugify
+            // Slugify for filename
             const slug = ideaTitle
               .toLowerCase()
               .replace(/[^a-z0-9]+/g, '-')
               .replace(/(^-|-$)/g, '')
               .slice(0, 80);
 
-            // Ensure folders exist
             const ideasDir = path.join(process.cwd(), 'ideas');
             const publicDir = path.join(process.cwd(), 'public');
             if (!fs.existsSync(ideasDir)) fs.mkdirSync(ideasDir, { recursive: true });
             if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
 
-            // Write idea file (id = issue number)
             const filename = `${created}-${slug}-${issueNumber}.md`;
             const ideaPath = path.join(ideasDir, filename);
 
@@ -86,14 +86,29 @@ jobs:
                 `source_issue: ${issueNumber}`,
                 '---',
                 '',
-                ideaDescription.trim(),
+                '# ' + ideaTitle,
+                '',
+                '## Description',
+                ideaDescription,
+                '',
+                '## Social Problem & Logos Stack Solution',
+                socialProblem || '_No data provided._',
+                '',
+                '## Previous Attempts & Hypotheses',
+                previousAttempts || '_No data provided._',
+                '',
+                '## Functional Specifications',
+                functionalSpecs || '_No data provided._',
+                '',
+                '## Risks & Deployment Strategy',
+                risksStrategy || '_No data provided._',
                 ''
               ].join('\n');
 
               fs.writeFileSync(ideaPath, md, 'utf8');
             }
 
-            // Read ideas and build ideas.json + README list
+            // Rebuild ideas.json
             const files = fs.readdirSync(ideasDir).filter(f => f.endsWith('.md')).sort().reverse();
 
             function parseFrontmatter(text) {
@@ -106,7 +121,7 @@ jobs:
                 if (idx === -1) continue;
                 const key = line.slice(0, idx).trim();
                 let val = line.slice(idx + 1).trim();
-                val = val.replace(/^"(.*)"$/, '$1'); // strip quotes
+                val = val.replace(/^"(.*)"$/, '$1');
                 data[key] = val;
               }
               return { data, body: text.slice(m[0].length) };
@@ -116,8 +131,8 @@ jobs:
               const full = fs.readFileSync(path.join(ideasDir, file), 'utf8');
               const { data, body } = parseFrontmatter(full);
               const excerpt = body
+                .replace(/#+.*?\n/g, '') // Remove headers from excerpt
                 .trim()
-                .replace(/\n+/g, ' ')
                 .replace(/\s+/g, ' ')
                 .slice(0, 280);
 
@@ -128,7 +143,7 @@ jobs:
                 created: data.created || '',
                 file,
                 url: `ideas/${file}`,
-                excerpt
+                excerpt: excerpt + '...'
               };
             }).filter(i => i.title);
 
@@ -138,71 +153,48 @@ jobs:
               'utf8'
             );
 
-            // Update README section between markers with collapsible entries
+            // Update README
             const readmePath = path.join(process.cwd(), 'README.md');
-            if (!fs.existsSync(readmePath)) {
-              core.setFailed('README.md not found. Create README.md with IDEAS markers.');
-              return;
-            }
+            if (fs.existsSync(readmePath)) {
+              const readme = fs.readFileSync(readmePath, 'utf8');
+              const start = '';
+              const end = '';
 
-            const readme = fs.readFileSync(readmePath, 'utf8');
-            const start = '<!-- IDEAS:START -->';
-            const end = '<!-- IDEAS:END -->';
-
-            if (!readme.includes(start) || !readme.includes(end)) {
-              core.setFailed('README markers not found. Add <!-- IDEAS:START --> and <!-- IDEAS:END -->');
-              return;
-            }
-
-            function escapeHtml(s) {
-              return String(s)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
-            }
-
-            const list = ideas.length
-              ? ideas.map(i => {
-                  const title = escapeHtml(i.title);
-                  const author = escapeHtml(i.author || 'unknown');
-                  const excerpt = escapeHtml(i.excerpt || '');
-                  const url = i.url;
-
+              if (readme.includes(start) && readme.includes(end)) {
+                const list = ideas.map(i => {
                   return [
                     '<details>',
-                    `<summary><b>${title}</b> (by @${author})</summary>`,
+                    `<summary><b>${i.title}</b> (by @${i.author})</summary>`,
                     '',
-                    excerpt ? `${excerpt}` : '',
+                    i.excerpt,
                     '',
-                    `<a href="${url}">Full details</a>`,
+                    `<a href="${i.url}">Read full proposal</a>`,
                     '</details>'
-                  ].filter(Boolean).join('\n');
-                }).join('\n\n')
-              : '_No approved ideas yet._';
+                  ].join('\n');
+                }).join('\n\n');
 
-            const markerRe = new RegExp(`${start}[\\s\\S]*?${end}`, 'm');
-            const updatedReadme = readme.replace(markerRe, `${start}\n${list}\n${end}`);
-            fs.writeFileSync(readmePath, updatedReadme, 'utf8');
+                const markerRe = new RegExp(`${start}[\\s\\S]*?${end}`, 'm');
+                fs.writeFileSync(readmePath, readme.replace(markerRe, `${start}\n${list}\n${end}`));
+              }
+            }
 
-            // Commit + push
+            // Git Operations
             execSync('git config user.name "github-actions[bot]"');
             execSync('git config user.email "github-actions[bot]@users.noreply.github.com"');
-
             execSync('git add ideas public/ideas.json README.md');
 
-            // If no changes, don't fail
             try {
               execSync('git diff --cached --quiet');
               console.log('No changes to commit.');
             } catch (e) {
-              execSync(`git commit -m "Publish idea #${issueNumber}"`);
+              execSync(`git commit -m "Publish idea #${issueNumber}: ${ideaTitle.slice(0, 30)}"`);
               execSync('git push');
             }
 
-            // Comment on the issue
+            // Feedback Comment
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `✅ Approved and published!\n\n- Added: \`ideas/${filename}\`\n- Updated: \`public/ideas.json\`\n- README refreshed (collapsible list)`
+              body: `🚀 **Idea Published!**\n\nYour proposal has been formalized and added to the repository.\n\n- **File:** \`ideas/${filename}\`\n- **Live Entry:** [View in README](../blob/main/README.md)`
             });
