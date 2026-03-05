@@ -1,5 +1,5 @@
 name: "💡 Submit an Idea"
-description: "Propose a new idea for this project"
+description: "Propose a structured social or technical solution"
 title: "[Idea]: "
 labels: ["idea", "under-review"]
 body:
@@ -7,7 +7,6 @@ body:
     id: idea_title
     attributes:
       label: Idea Title
-      placeholder: "A short, clear name for your idea"
     validations:
       required: true
 
@@ -15,6 +14,32 @@ body:
     id: idea_description
     attributes:
       label: Idea Description
-      placeholder: "Explain the idea. What should be built? Why is it useful?"
+      placeholder: "High-level summary of the idea."
     validations:
       required: true
+
+  - type: textarea
+    id: social_problem
+    attributes:
+      label: Social Problem & Logos Stack
+      placeholder: "What specific social problem does this solve? How does the Logos stack uniquely enable this solution?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: previous_attempts
+    attributes:
+      label: Previous Attempts & Hypotheses
+      placeholder: "What has been tried before? Why did it fail?"
+
+  - type: textarea
+    id: functional_specs
+    attributes:
+      label: Functional Specifications
+      placeholder: "User stories, FURPS (Functionality, Usability, Reliability, Performance, Supportability), etc."
+
+  - type: textarea
+    id: risks_strategy
+    attributes:
+      label: Risks and Deployment Strategy
+      placeholder: "Network effect hurdles, make-or-break criteria, and how you plan to deploy."
