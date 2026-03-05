@@ -3,6 +3,11 @@ name: Publish approved ideas
 on:
   issues:
     types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to publish manually'
+        required: true
 
 permissions:
   contents: write
@@ -10,8 +15,11 @@ permissions:
 
 jobs:
   publish:
-    # This check handles both 'approved' and 'Approved'
-    if: github.event.label.name == 'approved' || github.event.label.name == 'Approved'
+    # Trigger if labeled 'approved' OR if triggered manually
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      github.event.label.name == 'approved' || 
+      github.event.label.name == 'Approved'
     runs-on: ubuntu-latest
 
     steps:
@@ -33,8 +41,16 @@ jobs:
             const path = require('path');
             const { execSync } = require('child_process');
 
-            const issue = context.payload.issue;
-            const issueNumber = issue.number;
+            // Handle both label event and manual dispatch
+            const issueNumber = context.payload.issue ? context.payload.issue.number : parseInt(context.payload.inputs.issue_number);
+            
+            // Fetch issue data (necessary for manual dispatch)
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+            });
+
             const issueBody = issue.body || '';
             const author = issue.user?.login || 'unknown';
             const created = (issue.created_at || new Date().toISOString()).slice(0, 10);
@@ -66,37 +82,37 @@ jobs:
             const filename = `${created}-${slug}-${issueNumber}.md`;
             const ideaPath = path.join(ideasDir, filename);
 
-            if (!fs.existsSync(ideaPath)) {
-              const md = [
-                '---',
-                `id: ${issueNumber}`,
-                `title: "${ideaTitle.replace(/"/g, '\\"')}"`,
-                `status: approved`,
-                `author: "${author}"`,
-                `created: "${created}"`,
-                `source_issue: ${issueNumber}`,
-                '---',
-                '',
-                '# ' + ideaTitle,
-                '',
-                '## Description',
-                ideaDescription,
-                '',
-                '## Social Problem & Logos Stack Solution',
-                socialProblem || '_No data provided._',
-                '',
-                '## Previous Attempts & Hypotheses',
-                previousAttempts || '_No data provided._',
-                '',
-                '## Functional Specifications',
-                functionalSpecs || '_No data provided._',
-                '',
-                '## Risks & Deployment Strategy',
-                risksStrategy || '_No data provided._'
-              ].join('\n');
-              fs.writeFileSync(ideaPath, md, 'utf8');
-            }
+            const md = [
+              '---',
+              `id: ${issueNumber}`,
+              `title: "${ideaTitle.replace(/"/g, '\\"')}"`,
+              `status: approved`,
+              `author: "${author}"`,
+              `created: "${created}"`,
+              `source_issue: ${issueNumber}`,
+              '---',
+              '',
+              '# ' + ideaTitle,
+              '',
+              '## Description',
+              ideaDescription,
+              '',
+              '## Social Problem & Logos Stack Solution',
+              socialProblem || '_No data provided._',
+              '',
+              '## Previous Attempts & Hypotheses',
+              previousAttempts || '_No data provided._',
+              '',
+              '## Functional Specifications',
+              functionalSpecs || '_No data provided._',
+              '',
+              '## Risks & Deployment Strategy',
+              risksStrategy || '_No data provided._'
+            ].join('\n');
 
+            fs.writeFileSync(ideaPath, md, 'utf8');
+
+            // Rebuild ideas.json
             const files = fs.readdirSync(ideasDir).filter(f => f.endsWith('.md')).sort().reverse();
             
             function parseFrontmatter(text) {
@@ -104,20 +120,26 @@ jobs:
               if (!m) return { data: {}, body: text };
               const data = {};
               m[1].split('\n').forEach(line => {
-                const [k, ...v] = line.split(':');
-                if (k) data[k.trim()] = v.join(':').trim().replace(/^"(.*)"$/, '$1');
+                const idx = line.indexOf(':');
+                if (idx !== -1) {
+                  const key = line.slice(0, idx).trim();
+                  const val = line.slice(idx + 1).trim().replace(/^"(.*)"$/, '$1');
+                  data[key] = val;
+                }
               });
               return { data, body: text.slice(m[0].length) };
             }
 
             const ideas = files.map(file => {
-              const { data, body } = parseFrontmatter(fs.readFileSync(path.join(ideasDir, file), 'utf8'));
+              const content = fs.readFileSync(path.join(ideasDir, file), 'utf8');
+              const { data, body } = parseFrontmatter(content);
               const excerpt = body.replace(/#+.*?\n/g, '').trim().replace(/\s+/g, ' ').slice(0, 250);
               return { ...data, file, url: `ideas/${file}`, excerpt: excerpt + '...' };
             }).filter(i => i.title);
 
             fs.writeFileSync(path.join(publicDir, 'ideas.json'), JSON.stringify({ ideas }, null, 2));
 
+            // Update README
             const readmePath = path.join(process.cwd(), 'README.md');
             if (fs.existsSync(readmePath)) {
               const readme = fs.readFileSync(readmePath, 'utf8');
@@ -131,6 +153,7 @@ jobs:
               }
             }
 
+            // Git push
             execSync('git config user.name "github-actions[bot]"');
             execSync('git config user.email "github-actions[bot]@users.noreply.github.com"');
             execSync('git add .');
@@ -145,5 +168,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `🚀 **Idea Published!** Check the README or \`ideas/${filename}\`.`
+              body: `🚀 **Idea Published!** Check it out in the README or in \`ideas/${filename}\`.`
             });
