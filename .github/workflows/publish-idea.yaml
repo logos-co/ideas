@@ -10,12 +10,15 @@ permissions:
 
 jobs:
   publish:
-    if: github.event.label.name == 'approved'
+    # This check handles both 'approved' and 'Approved'
+    if: github.event.label.name == 'approved' || github.event.label.name == 'Approved'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -36,18 +39,14 @@ jobs:
             const author = issue.user?.login || 'unknown';
             const created = (issue.created_at || new Date().toISOString()).slice(0, 10);
 
-            // Extract section from Issue Form body
             function extractSection(heading) {
               const re = new RegExp(`###\\s+${heading}\\s*\\r?\\n([\\s\\S]*?)(?=\\r?\\n###\\s+|$)`, 'i');
               const m = issueBody.match(re);
               return m ? m[1].trim() : '';
             }
 
-            // Core Fields
             const ideaTitle = extractSection('Idea Title') || (issue.title || '').replace(/^\[Idea\]:\s*/i, '').trim();
             const ideaDescription = extractSection('Idea Description');
-            
-            // New Specialized Fields
             const socialProblem = extractSection('Social Problem & Logos Stack');
             const previousAttempts = extractSection('Previous Attempts & Hypotheses');
             const functionalSpecs = extractSection('Functional Specifications');
@@ -58,13 +57,7 @@ jobs:
               return;
             }
 
-            // Slugify for filename
-            const slug = ideaTitle
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/(^-|-$)/g, '')
-              .slice(0, 80);
-
+            const slug = ideaTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 80);
             const ideasDir = path.join(process.cwd(), 'ideas');
             const publicDir = path.join(process.cwd(), 'public');
             if (!fs.existsSync(ideasDir)) fs.mkdirSync(ideasDir, { recursive: true });
@@ -74,12 +67,10 @@ jobs:
             const ideaPath = path.join(ideasDir, filename);
 
             if (!fs.existsSync(ideaPath)) {
-              const safeTitle = ideaTitle.replace(/"/g, '\\"');
-
               const md = [
                 '---',
                 `id: ${issueNumber}`,
-                `title: "${safeTitle}"`,
+                `title: "${ideaTitle.replace(/"/g, '\\"')}"`,
                 `status: approved`,
                 `author: "${author}"`,
                 `created: "${created}"`,
@@ -101,101 +92,58 @@ jobs:
                 functionalSpecs || '_No data provided._',
                 '',
                 '## Risks & Deployment Strategy',
-                risksStrategy || '_No data provided._',
-                ''
+                risksStrategy || '_No data provided._'
               ].join('\n');
-
               fs.writeFileSync(ideaPath, md, 'utf8');
             }
 
-            // Rebuild ideas.json
             const files = fs.readdirSync(ideasDir).filter(f => f.endsWith('.md')).sort().reverse();
-
+            
             function parseFrontmatter(text) {
               const m = text.match(/^---\n([\s\S]*?)\n---\n/);
               if (!m) return { data: {}, body: text };
-              const fm = m[1].split('\n');
               const data = {};
-              for (const line of fm) {
-                const idx = line.indexOf(':');
-                if (idx === -1) continue;
-                const key = line.slice(0, idx).trim();
-                let val = line.slice(idx + 1).trim();
-                val = val.replace(/^"(.*)"$/, '$1');
-                data[key] = val;
-              }
+              m[1].split('\n').forEach(line => {
+                const [k, ...v] = line.split(':');
+                if (k) data[k.trim()] = v.join(':').trim().replace(/^"(.*)"$/, '$1');
+              });
               return { data, body: text.slice(m[0].length) };
             }
 
-            const ideas = files.map((file) => {
-              const full = fs.readFileSync(path.join(ideasDir, file), 'utf8');
-              const { data, body } = parseFrontmatter(full);
-              const excerpt = body
-                .replace(/#+.*?\n/g, '') // Remove headers from excerpt
-                .trim()
-                .replace(/\s+/g, ' ')
-                .slice(0, 280);
-
-              return {
-                id: Number(data.id || 0),
-                title: data.title || '',
-                author: (data.author || '').replace(/^@/, ''),
-                created: data.created || '',
-                file,
-                url: `ideas/${file}`,
-                excerpt: excerpt + '...'
-              };
+            const ideas = files.map(file => {
+              const { data, body } = parseFrontmatter(fs.readFileSync(path.join(ideasDir, file), 'utf8'));
+              const excerpt = body.replace(/#+.*?\n/g, '').trim().replace(/\s+/g, ' ').slice(0, 250);
+              return { ...data, file, url: `ideas/${file}`, excerpt: excerpt + '...' };
             }).filter(i => i.title);
 
-            fs.writeFileSync(
-              path.join(publicDir, 'ideas.json'),
-              JSON.stringify({ ideas }, null, 2),
-              'utf8'
-            );
+            fs.writeFileSync(path.join(publicDir, 'ideas.json'), JSON.stringify({ ideas }, null, 2));
 
-            // Update README
             const readmePath = path.join(process.cwd(), 'README.md');
             if (fs.existsSync(readmePath)) {
               const readme = fs.readFileSync(readmePath, 'utf8');
-              const start = '';
-              const end = '';
+              const startMarker = '';
+              const endMarker = '';
 
-              if (readme.includes(start) && readme.includes(end)) {
-                const list = ideas.map(i => {
-                  return [
-                    '<details>',
-                    `<summary><b>${i.title}</b> (by @${i.author})</summary>`,
-                    '',
-                    i.excerpt,
-                    '',
-                    `<a href="${i.url}">Read full proposal</a>`,
-                    '</details>'
-                  ].join('\n');
-                }).join('\n\n');
-
-                const markerRe = new RegExp(`${start}[\\s\\S]*?${end}`, 'm');
-                fs.writeFileSync(readmePath, readme.replace(markerRe, `${start}\n${list}\n${end}`));
+              if (readme.includes(startMarker) && readme.includes(endMarker)) {
+                const list = ideas.map(i => `<details><summary><b>${i.title}</b> (by @${i.author})</summary>\n\n${i.excerpt}\n\n<a href="${i.url}">Read full proposal</a>\n</details>`).join('\n\n');
+                const markerRe = new RegExp(`${startMarker}[\\s\\S]*?${endMarker}`, 'm');
+                fs.writeFileSync(readmePath, readme.replace(markerRe, `${startMarker}\n${list}\n${endMarker}`));
               }
             }
 
-            // Git Operations
             execSync('git config user.name "github-actions[bot]"');
             execSync('git config user.email "github-actions[bot]@users.noreply.github.com"');
-            execSync('git add ideas public/ideas.json README.md');
-
+            execSync('git add .');
             try {
               execSync('git diff --cached --quiet');
-              console.log('No changes to commit.');
             } catch (e) {
-              execSync(`git commit -m "Publish idea #${issueNumber}: ${ideaTitle.slice(0, 30)}"`);
+              execSync(`git commit -m "Publish idea #${issueNumber}"`);
               execSync('git push');
             }
 
-            // Feedback Comment
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `🚀 **Idea Published!**\n\nYour proposal has been formalized and added to the repository.\n\n- **File:** \`ideas/${filename}\`\n- **Live Entry:** [View in README](../blob/main/README.md)`
+              body: `🚀 **Idea Published!** Check the README or \`ideas/${filename}\`.`
             });
-
