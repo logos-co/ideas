@@ -15,7 +15,6 @@ permissions:
 
 jobs:
   publish:
-    # Fix: Ensure it only runs for the correct label or manual trigger
     if: |
       github.event_name == 'workflow_dispatch' || 
       (github.event_name == 'issues' && 
@@ -41,7 +40,6 @@ jobs:
             const path = require('path');
             const { execSync } = require('child_process');
 
-            // 1. Resolve Issue Number
             const issueNumber = context.payload.issue ? context.payload.issue.number : parseInt(context.payload.inputs.issue_number);
             
             const { data: issue } = await github.rest.issues.get({
@@ -54,7 +52,6 @@ jobs:
             const author = issue.user?.login || 'unknown';
             const created = (issue.created_at || new Date().toISOString()).slice(0, 10);
 
-            // 2. Extract content from Issue Template sections
             function extractSection(heading) {
               const re = new RegExp(`###\\s+${heading}\\s*\\r?\\n([\\s\\S]*?)(?=\\r?\\n###\\s+|$)`, 'i');
               const m = issueBody.match(re);
@@ -69,11 +66,10 @@ jobs:
             const risksStrategy = extractSection('Risks and Deployment Strategy');
 
             if (!ideaTitle || !ideaDescription) {
-              core.setFailed('Missing required fields: Idea Title and/or Idea Description.');
+              core.setFailed('Missing required fields.');
               return;
             }
 
-            // 3. Setup Paths
             const slug = ideaTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 80);
             const ideasDir = path.join(process.cwd(), 'ideas');
             const publicDir = path.join(process.cwd(), 'public');
@@ -83,7 +79,6 @@ jobs:
             const filename = `${created}-${slug}-${issueNumber}.md`;
             const ideaPath = path.join(ideasDir, filename);
 
-            // 4. Generate the Detail Markdown File
             const md = [
               '---',
               `id: ${issueNumber}`,
@@ -114,7 +109,6 @@ jobs:
 
             fs.writeFileSync(ideaPath, md, 'utf8');
 
-            // 5. Build Ideas List for JSON and README
             const files = fs.readdirSync(ideasDir).filter(f => f.endsWith('.md')).sort().reverse();
             
             function parseFrontmatter(text) {
@@ -141,28 +135,31 @@ jobs:
 
             fs.writeFileSync(path.join(publicDir, 'ideas.json'), JSON.stringify({ ideas }, null, 2));
 
-            // 6. Update README surgically
+            // --- REFINED README UPDATE ---
             const readmePath = path.join(process.cwd(), 'README.md');
             if (fs.existsSync(readmePath)) {
-              const readme = fs.readFileSync(readmePath, 'utf8');
+              let readme = fs.readFileSync(readmePath, 'utf8');
               const startMarker = '';
               const endMarker = '';
 
-              if (readme.includes(startMarker) && readme.includes(endMarker)) {
-                const parts = readme.split(startMarker);
-                const head = parts[0];
-                const tail = parts[1].split(endMarker)[1];
+              const list = ideas.map(i => 
+                `<details>\n<summary><b>${i.title}</b> (by @${i.author})</summary>\n${i.excerpt}\n<a href="${i.url}">Full details</a>\n</details>`
+              ).join('\n\n');
 
-                const list = ideas.map(i => 
-                  `<details>\n<summary><b>${i.title}</b> (by @${i.author})</summary>\n${i.excerpt}\n<a href="${i.url}">Full details</a>\n</details>`
-                ).join('\n\n');
+              const contentToInject = `${startMarker}\n${list}\n${endMarker}`;
+              
+              // This regex finds the markers and EVERYTHING between them
+              const regex = new RegExp(`${startMarker}[\\s\\S]*?${endMarker}`, 'g');
 
-                const newReadme = `${head}${startMarker}\n${list}\n${endMarker}${tail}`;
+              if (regex.test(readme)) {
+                // We only replace the block, keeping the banner and footer intact
+                const newReadme = readme.replace(regex, contentToInject);
                 fs.writeFileSync(readmePath, newReadme, 'utf8');
+              } else {
+                console.log("Markers not found. Make sure and exist in README.");
               }
             }
 
-            // 7. Commit and Push
             execSync('git config user.name "github-actions[bot]"');
             execSync('git config user.email "github-actions[bot]@users.noreply.github.com"');
             execSync('git add .');
@@ -177,5 +174,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `🚀 **Idea Published!** Check it out in the README or in \`ideas/${filename}\`.`
+              body: `🚀 **Idea Published!** Check it out in the README.`
             });
