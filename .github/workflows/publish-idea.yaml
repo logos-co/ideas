@@ -139,8 +139,8 @@ jobs:
             const readmePath = path.join(process.cwd(), 'README.md');
             if (fs.existsSync(readmePath)) {
               let readme = fs.readFileSync(readmePath, 'utf8');
-              const startMarker = '';
-              const endMarker = '';
+              const startMarker = '<!-- IDEAS:START -->';
+              const endMarker = '<!-- IDEAS:END -->';
 
               const list = ideas.map(i => 
                 `<details>\n<summary><b>${i.title}</b> (by @${i.author})</summary>\n${i.excerpt}\n<a href="${i.url}">Full details</a>\n</details>`
@@ -148,15 +148,14 @@ jobs:
 
               const contentToInject = `${startMarker}\n${list}\n${endMarker}`;
               
-              // This regex finds the markers and EVERYTHING between them
-              const regex = new RegExp(`${startMarker}[\\s\\S]*?${endMarker}`, 'g');
+              const startIdx = readme.indexOf(startMarker);
+              const endIdx = readme.indexOf(endMarker);
 
-              if (regex.test(readme)) {
-                // We only replace the block, keeping the banner and footer intact
-                const newReadme = readme.replace(regex, contentToInject);
+              if (startIdx !== -1 && endIdx !== -1) {
+                const newReadme = readme.slice(0, startIdx) + contentToInject + readme.slice(endIdx + endMarker.length);
                 fs.writeFileSync(readmePath, newReadme, 'utf8');
               } else {
-                console.log("Markers not found. Make sure and exist in README.");
+                console.log("Markers not found. Make sure <!-- IDEAS:START --> and <!-- IDEAS:END --> exist in README.");
               }
             }
 
