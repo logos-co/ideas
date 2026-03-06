@@ -3,6 +3,23 @@
 # Logos Community Idea Board
 
 <!-- IDEAS:START -->
+<details>
+<summary><b>test1</b> (by @hackyguru)</summary>
+test1 test1 _No response_ _No response_ _No response_
+<a href="ideas/2026-03-06-test1-14.md">Full details</a>
+</details>
+
+<details>
+<summary><b>test</b> (by @hackyguru)</summary>
+test test test test test
+<a href="ideas/2026-03-06-test-12.md">Full details</a>
+</details>
+
+<details>
+<summary><b>test</b> (by @hackyguru)</summary>
+test test test test test
+<a href="ideas/2026-03-05-test-6.md">Full details</a>
+</details>
 
 <details>
 <summary><b>Privacy preserving location tracker</b> (by @hackyguru)</summary>
