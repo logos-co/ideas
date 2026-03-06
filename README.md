@@ -3,17 +3,6 @@
 # Logos Community Idea Board
 
 <!-- IDEAS:START -->
-<details>
-<summary><b>test</b> (by @hackyguru)</summary>
-test test test test test
-<a href="ideas/2026-03-06-test-12.md">Full details</a>
-</details>
-
-<details>
-<summary><b>test</b> (by @hackyguru)</summary>
-test test test test test
-<a href="ideas/2026-03-05-test-6.md">Full details</a>
-</details>
 
 <details>
 <summary><b>Privacy preserving location tracker</b> (by @hackyguru)</summary>
@@ -37,3 +26,4 @@ Centralised version control and code hosting platforms like GitHub can pose priv
 ## Contribute by proposing a new idea
 
 Have an interesting idea that can be built with the [Logos](https://logos.co) technology stack? [Create an issue](https://github.com/logos-co/ideas/issues/new?template=idea.yml) to add your own idea into this community curated idea board.
+
