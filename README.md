@@ -1,9 +1,11 @@
 
-![Banner](/public/ideaboard-header.png)
 
-# Logos Community Idea Board
+<details>
+<summary><b>test</b> (by @hackyguru)</summary>
+test test test test test
+<a href="ideas/2026-03-05-test-6.md">Full details</a>
+</details>
 
-<!-- IDEAS:START -->
 <details>
 <summary><b>Privacy preserving location tracker</b> (by @hackyguru)</summary>
 A location tracker that does not expose user's location and enables them to share it with each other provided that they are shared access
@@ -18,11 +20,7 @@ A bias-less HR platform that does not discriminate applicants based on diversify
 
 <details>
 <summary><b>Decentralised and private GitHub</b> (by @hackyguru)</summary>
-Centralised version control and code hosting platforms like GitHub can pose privacy and censorship risks to developers who are working on critical areas of development. A decentralised alternative to GitHub could be revolutionary in fixing this problem.
+Centralised version control and code hosting platforms like GitHub can pose privacy and censorship risks to developers who are working on critical areas of development. A decentralised alternative to GitHub could be revolutionary in fixing this probl
 <a href="ideas/2026-02-05-decentralised-and-private-github-2.md">Full details</a>
 </details>
-<!-- IDEAS:END -->
-
-## Contribute by proposing a new idea
-
-Have an interesting idea that can be built with the [Logos](https://logos.co) technology stack? [Create an issue](https://github.com/logos-co/ideas/issues/new?template=idea.yml) to add your own idea into this community curated idea board.
+undefined
