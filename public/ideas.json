@@ -1,31 +1,48 @@
 {
   "ideas": [
     {
-      "id": 3,
+      "id": "6",
+      "title": "test",
+      "status": "approved",
+      "author": "hackyguru",
+      "created": "2026-03-05",
+      "source_issue": "6",
+      "file": "2026-03-05-test-6.md",
+      "url": "ideas/2026-03-05-test-6.md",
+      "excerpt": "test test test test test..."
+    },
+    {
+      "id": "3",
       "title": "Privacy preserving location tracker",
+      "status": "approved",
       "author": "hackyguru",
       "created": "2026-02-12",
+      "source_issue": "3",
       "file": "2026-02-12-privacy-preserving-location-tracker-3.md",
       "url": "ideas/2026-02-12-privacy-preserving-location-tracker-3.md",
-      "excerpt": "A location tracker that does not expose user's location and enables them to share it with each other provided that they are shared access"
+      "excerpt": "A location tracker that does not expose user's location and enables them to share it with each other provided that they are shared access..."
     },
     {
-      "id": 4,
+      "id": "4",
       "title": "Decentralized and Privacy-Focused Hiring Platform (Web3 version of BambooHR)",
+      "status": "approved",
       "author": "hackyguru",
       "created": "2026-02-12",
+      "source_issue": "4",
       "file": "2026-02-12-decentralized-and-privacy-focused-hiring-platform-web3-version-of-bamboohr-4.md",
       "url": "ideas/2026-02-12-decentralized-and-privacy-focused-hiring-platform-web3-version-of-bamboohr-4.md",
-      "excerpt": "A bias-less HR platform that does not discriminate applicants based on diversifying factors"
+      "excerpt": "A bias-less HR platform that does not discriminate applicants based on diversifying factors..."
     },
     {
-      "id": 2,
+      "id": "2",
       "title": "Decentralised and private GitHub",
+      "status": "approved",
       "author": "hackyguru",
       "created": "2026-02-05",
+      "source_issue": "2",
       "file": "2026-02-05-decentralised-and-private-github-2.md",
       "url": "ideas/2026-02-05-decentralised-and-private-github-2.md",
-      "excerpt": "Centralised version control and code hosting platforms like GitHub can pose privacy and censorship risks to developers who are working on critical areas of development. A decentralised alternative to GitHub could be revolutionary in fixing this problem."
+      "excerpt": "Centralised version control and code hosting platforms like GitHub can pose privacy and censorship risks to developers who are working on critical areas of development. A decentralised alternative to GitHub could be revolutionary in fixing this probl..."
     }
   ]
 }
