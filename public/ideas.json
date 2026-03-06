@@ -1,6 +1,17 @@
 {
   "ideas": [
     {
+      "id": "12",
+      "title": "test",
+      "status": "approved",
+      "author": "hackyguru",
+      "created": "2026-03-06",
+      "source_issue": "12",
+      "file": "2026-03-06-test-12.md",
+      "url": "ideas/2026-03-06-test-12.md",
+      "excerpt": "test test test test test"
+    },
+    {
       "id": "6",
       "title": "test",
       "status": "approved",
