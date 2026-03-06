@@ -4,6 +4,30 @@
 
 <!-- IDEAS:START -->
 <details>
+<summary><b>test1</b> (by @hackyguru)</summary>
+test1 test1 _No response_ _No response_ _No response_
+<a href="ideas/2026-03-06-test1-14.md">Full details</a>
+</details>
+
+<details>
+<summary><b>test</b> (by @hackyguru)</summary>
+test test test test test
+<a href="ideas/2026-03-06-test-12.md">Full details</a>
+</details>
+
+<details>
+<summary><b>Decoupling personal thought from the cloud using the Logos tech Stack</b> (by @xAlisher)</summary>
+Encrypted notes manager utilising Logos stack to store, edit and sync encrypted notes. Most of commonly used notes managers storing data in centralised databases - leaking metadata and not reliable. Three "waves" of private note apps, and their failu
+<a href="ideas/2026-03-06-decoupling-personal-thought-from-the-cloud-using-the-logos-tech-stack-13.md">Full details</a>
+</details>
+
+<details>
+<summary><b>test</b> (by @hackyguru)</summary>
+test test test test test
+<a href="ideas/2026-03-05-test-6.md">Full details</a>
+</details>
+
+<details>
 <summary><b>Privacy preserving location tracker</b> (by @hackyguru)</summary>
 A location tracker that does not expose user's location and enables them to share it with each other provided that they are shared access
 <a href="ideas/2026-02-12-privacy-preserving-location-tracker-3.md">Full details</a>

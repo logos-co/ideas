@@ -23,6 +23,17 @@
       "excerpt": "test test test test test"
     },
     {
+      "id": "13",
+      "title": "Decoupling personal thought from the cloud using the Logos tech Stack",
+      "status": "approved",
+      "author": "xAlisher",
+      "created": "2026-03-06",
+      "source_issue": "13",
+      "file": "2026-03-06-decoupling-personal-thought-from-the-cloud-using-the-logos-tech-stack-13.md",
+      "url": "ideas/2026-03-06-decoupling-personal-thought-from-the-cloud-using-the-logos-tech-stack-13.md",
+      "excerpt": "Encrypted notes manager utilising Logos stack to store, edit and sync encrypted notes. Most of commonly used notes managers storing data in centralised databases - leaking metadata and not reliable. Three \"waves\" of private note apps, and their failu"
+    },
+    {
       "id": "6",
       "title": "test",
       "status": "approved",
