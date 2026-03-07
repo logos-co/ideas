@@ -1,6 +1,17 @@
 {
   "ideas": [
     {
+      "id": "19",
+      "title": "Logos Storage → Postgres-equivalent → Supabase-equivalent",
+      "status": "approved",
+      "author": "deca12x",
+      "created": "2026-03-07",
+      "source_issue": "19",
+      "file": "2026-03-07-logos-storage-postgres-equivalent-supabase-equivalent-19.md",
+      "url": "ideas/2026-03-07-logos-storage-postgres-equivalent-supabase-equivalent-19.md",
+      "excerpt": "TLDR: make Logos usable as an app backend, not only as a storage substrate. Today Logos Storage is low-level: great for storing blobs/files, but not enough for most app builders. Most teams need a higher abstraction layer: structured data, queries, i"
+    },
+    {
       "id": "14",
       "title": "test1",
       "status": "approved",
