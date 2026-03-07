@@ -3,8 +3,6 @@
 # Logos Community Idea Board
 
 <!-- IDEAS:START -->
-
-
 <details>
 <summary><b>Decoupling personal thought from the cloud using the Logos tech Stack</b> (by @xAlisher)</summary>
 Encrypted notes manager utilising Logos stack to store, edit and sync encrypted notes. Most of commonly used notes managers storing data in centralised databases - leaking metadata and not reliable. Three "waves" of private note apps, and their failu
@@ -33,4 +31,5 @@ Centralised version control and code hosting platforms like GitHub can pose priv
 ## Contribute by proposing a new idea
 
 Have an interesting idea that can be built with the [Logos](https://logos.co) technology stack? [Create an issue](https://github.com/logos-co/ideas/issues/new?template=idea.yml) to add your own idea into this community curated idea board.
+
 
