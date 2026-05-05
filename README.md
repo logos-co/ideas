@@ -4,6 +4,12 @@
 
 <!-- IDEAS:START -->
 <details>
+<summary><b>A Web of Trust for Logos</b> (by @otherfren)</summary>
+A peer-to-peer Web of Trust (WoT) as a foundational trust layer for the Logos stack - enabling OTC/P2P trade and future services like oracles or DAOs. Users form nodes in a directed trust graph. Each rating is a signed score from the set `{-3, -1, +1
+<a href="ideas/2026-04-24-a-web-of-trust-for-logos-34.md">Full details</a>
+</details>
+
+<details>
 <summary><b>Decoupling personal thought from the cloud using the Logos tech Stack</b> (by @xAlisher)</summary>
 Encrypted notes manager utilising Logos stack to store, edit and sync encrypted notes. Most of commonly used notes managers storing data in centralised databases - leaking metadata and not reliable. Three "waves" of private note apps, and their failu
 <a href="ideas/2026-03-06-decoupling-personal-thought-from-the-cloud-using-the-logos-tech-stack-13.md">Full details</a>
