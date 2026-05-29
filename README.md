@@ -10,6 +10,12 @@ A peer-to-peer Web of Trust (WoT) as a foundational trust layer for the Logos st
 </details>
 
 <details>
+<summary><b>Sudoku game module for Basecamp</b> (by @chair28980)</summary>
+Sudoku game module for Basecamp application. My hypothesis is the more games created for Basecamp the better its chances for adoption by a wide range of users. _No data provided._ clone the 'standard' Sudoku game flow _No data provided._
+<a href="ideas/2026-04-03-sudoku-game-module-for-basecamp-33.md">Full details</a>
+</details>
+
+<details>
 <summary><b>Decoupling personal thought from the cloud using the Logos tech Stack</b> (by @xAlisher)</summary>
 Encrypted notes manager utilising Logos stack to store, edit and sync encrypted notes. Most of commonly used notes managers storing data in centralised databases - leaking metadata and not reliable. Three "waves" of private note apps, and their failu
 <a href="ideas/2026-03-06-decoupling-personal-thought-from-the-cloud-using-the-logos-tech-stack-13.md">Full details</a>

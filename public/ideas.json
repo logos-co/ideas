@@ -12,6 +12,17 @@
       "excerpt": "A peer-to-peer Web of Trust (WoT) as a foundational trust layer for the Logos stack - enabling OTC/P2P trade and future services like oracles or DAOs. Users form nodes in a directed trust graph. Each rating is a signed score from the set `{-3, -1, +1"
     },
     {
+      "id": "33",
+      "title": "Sudoku game module for Basecamp",
+      "status": "approved",
+      "author": "chair28980",
+      "created": "2026-04-03",
+      "source_issue": "33",
+      "file": "2026-04-03-sudoku-game-module-for-basecamp-33.md",
+      "url": "ideas/2026-04-03-sudoku-game-module-for-basecamp-33.md",
+      "excerpt": "Sudoku game module for Basecamp application. My hypothesis is the more games created for Basecamp the better its chances for adoption by a wide range of users. _No data provided._ clone the 'standard' Sudoku game flow _No data provided._"
+    },
+    {
       "id": "13",
       "title": "Decoupling personal thought from the cloud using the Logos tech Stack",
       "status": "approved",
